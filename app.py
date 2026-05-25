@@ -17,7 +17,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-
 .main {
     background: linear-gradient(to right, #eef2f3, #dfe9f3);
 }
@@ -40,6 +39,7 @@ st.markdown("""
     padding: 25px;
     border-radius: 18px;
     box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
 }
 
 .stButton>button {
@@ -57,15 +57,23 @@ st.markdown("""
     background: linear-gradient(135deg,#0D47A1,#1E88E5);
     color: white;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ---------------- #
 
-model = load_model("titanic_ann_model.h5")
+# Cache resource ensures the model is only loaded ONCE, speeding up your app drastically
+@st.cache_resource
+def load_prediction_assets():
+    model = load_model("titanic_ann_model.h5")
+    scaler = joblib.load("scaler.pkl")
+    return model, scaler
 
-scaler = joblib.load("scaler.pkl")
+try:
+    model, scaler = load_prediction_assets()
+except Exception as e:
+    st.error(f"Error loading model or scaler. Ensure 'titanic_ann_model.h5' and 'scaler.pkl' are in the repository. Details: {e}")
+    st.stop()
 
 # ---------------- HEADER ---------------- #
 
@@ -85,44 +93,23 @@ left_col, right_col = st.columns(2)
 # ---------------- INPUT SECTION ---------------- #
 
 with left_col:
-
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.subheader("🧾 Passenger Details")
 
-    pclass = st.selectbox(
-        "Passenger Class",
-        [1, 2, 3]
-    )
-
-    age = st.slider(
-        "Age",
-        1,
-        80,
-        25
-    )
-
-    fare = st.number_input(
-        "Fare",
-        min_value=0.0,
-        max_value=600.0,
-        value=50.0
-    )
-
+    pclass = st.selectbox("Passenger Class", [1, 2, 3])
+    age = st.slider("Age", 1, 80, 25)
+    fare = st.number_input("Fare", min_value=0.0, max_value=600.0, value=50.0)
+    
     predict = st.button("🔍 Predict Survival")
-
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- PREDICTION SECTION ---------------- #
 
 with right_col:
-
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.subheader("📊 Prediction Results")
 
     if predict:
-
         input_data = pd.DataFrame({
             'Pclass': [pclass],
             'Age': [age],
@@ -130,9 +117,7 @@ with right_col:
         })
 
         input_scaled = scaler.transform(input_data)
-
         prediction = model.predict(input_scaled, verbose=0)
-
         probability = float(prediction[0][0])
 
         if probability > 0.5:
@@ -143,9 +128,7 @@ with right_col:
         confidence = max(probability, 1 - probability)
 
         # METRICS
-
         c1, c2, c3 = st.columns(3)
-
         c1.metric("Prediction", result)
         c2.metric("Probability", f"{probability:.2f}")
         c3.metric("Confidence", f"{confidence:.2f}")
@@ -153,26 +136,25 @@ with right_col:
         st.write("")
 
         # SMALL DONUT CHART
-
-        fig, ax = plt.subplots(figsize=(2.5, 2.5))
-
+        fig, ax = plt.subplots(figsize=(3, 3))
         values = [probability, 1 - probability]
         labels = ['Survive', 'Not Survive']
+        colors = ['#42A5F5', '#ef5350']
 
         ax.pie(
             values,
             labels=labels,
             autopct='%1.1f%%',
             startangle=90,
-            wedgeprops=dict(width=0.4)
+            colors=colors,
+            wedgeprops=dict(width=0.4, edgecolor='w')
         )
-
         ax.axis('equal')
-
+        
         st.pyplot(fig)
+        plt.close(fig)  # Clean up memory
 
     else:
-
         st.info("Enter passenger details and click Predict Survival.")
 
     st.markdown('</div>', unsafe_allow_html=True)
