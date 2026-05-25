@@ -1,29 +1,22 @@
 import streamlit as st
 import pandas as pd
-import tensorflow as tf
+import numpy as np
 import joblib
+from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 
-# ---------------------------------------------------
-# PAGE CONFIG
-# ---------------------------------------------------
+# ---------------- PAGE CONFIG ---------------- #
 
 st.set_page_config(
     page_title="Titanic Survival Prediction",
     page_icon="🚢",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
-# ---------------------------------------------------
-# CUSTOM CSS
-# ---------------------------------------------------
+# ---------------- CUSTOM CSS ---------------- #
 
 st.markdown("""
 <style>
-
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
 
 .main {
     background: linear-gradient(to right, #eef2f3, #dfe9f3);
@@ -31,172 +24,104 @@ footer {visibility: hidden;}
 
 .block-container {
     padding-top: 2rem;
-    padding-bottom: 2rem;
 }
 
-/* Header Card */
-
-.header-card {
+.header-box {
     background: linear-gradient(135deg, #1565C0, #42A5F5);
-    padding: 35px;
-    border-radius: 22px;
-    color: white;
+    padding: 30px;
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.15);
+    color: white;
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.15);
 }
 
-/* Glassmorphism Cards */
-
-.glass-card {
-    background: rgba(255,255,255,0.65);
-    backdrop-filter: blur(10px);
+.card {
+    background-color: white;
     padding: 25px;
-    border-radius: 22px;
-    box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid rgba(255,255,255,0.3);
-}
-
-/* Prediction Result */
-
-.result-success {
-    background: linear-gradient(135deg,#43A047,#66BB6A);
-    padding: 20px;
     border-radius: 18px;
-    color: white;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+    box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
 }
 
-.result-fail {
-    background: linear-gradient(135deg,#E53935,#EF5350);
-    padding: 20px;
-    border-radius: 18px;
-    color: white;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
-}
-
-/* Button */
-
-.stButton > button {
+.stButton>button {
     width: 100%;
+    height: 3em;
+    border-radius: 12px;
+    border: none;
     background: linear-gradient(135deg,#1565C0,#42A5F5);
     color: white;
-    border: none;
-    border-radius: 14px;
-    height: 3.2em;
     font-size: 18px;
     font-weight: bold;
-    transition: 0.3s;
 }
 
-.stButton > button:hover {
-    transform: scale(1.03);
+.stButton>button:hover {
     background: linear-gradient(135deg,#0D47A1,#1E88E5);
     color: white;
-}
-
-/* Metrics */
-
-[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.75);
-    border-radius: 18px;
-    padding: 15px;
-    box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------
-# LOAD MODEL
-# ---------------------------------------------------
+# ---------------- LOAD MODEL ---------------- #
 
-model = tf.keras.models.load_model("titanic_ann_model.h5")
+model = load_model("titanic_ann_model.h5")
 
 scaler = joblib.load("scaler.pkl")
 
-# ---------------------------------------------------
-# HEADER
-# ---------------------------------------------------
+# ---------------- HEADER ---------------- #
 
 st.markdown("""
-<div class="header-card">
-    <h1>🚢 Titanic Survival Prediction System</h1>
-    <h4>Deep Learning Based Passenger Survival Prediction</h4>
+<div class="header-box">
+<h1>🚢 Titanic Survival Prediction System</h1>
+<h4>Deep Learning Based Passenger Survival Prediction</h4>
 </div>
 """, unsafe_allow_html=True)
 
 st.write("")
 
-# ---------------------------------------------------
-# MAIN LAYOUT
-# ---------------------------------------------------
+# ---------------- LAYOUT ---------------- #
 
-left_col, right_col = st.columns([1, 1])
+left_col, right_col = st.columns(2)
 
-# ---------------------------------------------------
-# INPUT PANEL
-# ---------------------------------------------------
+# ---------------- INPUT SECTION ---------------- #
 
 with left_col:
 
-    st.markdown("""
-    <div class="glass-card">
-    <h2>🧾 Passenger Information</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.write("")
+    st.subheader("🧾 Passenger Details")
 
     pclass = st.selectbox(
         "Passenger Class",
-        [1, 2, 3],
-        help="1 = First Class, 2 = Second Class, 3 = Third Class"
+        [1, 2, 3]
     )
 
     age = st.slider(
         "Age",
-        min_value=1,
-        max_value=80,
-        value=25
+        1,
+        80,
+        25
     )
 
     fare = st.number_input(
         "Fare",
         min_value=0.0,
         max_value=600.0,
-        value=50.0,
-        step=1.0
+        value=50.0
     )
 
-    st.write("")
+    predict = st.button("🔍 Predict Survival")
 
-    predict_btn = st.button("🔍 Predict Survival")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------------------------------------
-# OUTPUT PANEL
-# ---------------------------------------------------
+# ---------------- PREDICTION SECTION ---------------- #
 
 with right_col:
 
-    st.markdown("""
-    <div class="glass-card">
-    <h2>📊 AI Prediction Dashboard</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.write("")
+    st.subheader("📊 Prediction Results")
 
-    if predict_btn:
-
-        # -------------------------------------------
-        # INPUT DATA
-        # -------------------------------------------
+    if predict:
 
         input_data = pd.DataFrame({
             'Pclass': [pclass],
@@ -204,86 +129,34 @@ with right_col:
             'Fare': [fare]
         })
 
-        # -------------------------------------------
-        # SCALING
-        # -------------------------------------------
-
         input_scaled = scaler.transform(input_data)
-
-        # -------------------------------------------
-        # PREDICTION
-        # -------------------------------------------
 
         prediction = model.predict(input_scaled, verbose=0)
 
         probability = float(prediction[0][0])
 
-        survive_prob = probability
-        nonsurvive_prob = 1 - probability
-
-        confidence = max(survive_prob, nonsurvive_prob)
-
-        # -------------------------------------------
-        # RESULT
-        # -------------------------------------------
-
-        if survive_prob > 0.5:
-
-            st.markdown(f"""
-            <div class="result-success">
-                ✅ SURVIVED
-            </div>
-            """, unsafe_allow_html=True)
-
+        if probability > 0.5:
+            result = "✅ Survived"
         else:
+            result = "❌ Not Survived"
 
-            st.markdown(f"""
-            <div class="result-fail">
-                ❌ NOT SURVIVED
-            </div>
-            """, unsafe_allow_html=True)
+        confidence = max(probability, 1 - probability)
 
-        st.write("")
-
-        # -------------------------------------------
         # METRICS
-        # -------------------------------------------
 
-        m1, m2, m3 = st.columns(3)
+        c1, c2, c3 = st.columns(3)
 
-        with m1:
-            st.metric(
-                "Survival Probability",
-                f"{survive_prob:.2f}"
-            )
-
-        with m2:
-            st.metric(
-                "Non-Survival",
-                f"{nonsurvive_prob:.2f}"
-            )
-
-        with m3:
-            st.metric(
-                "Confidence",
-                f"{confidence:.2f}"
-            )
+        c1.metric("Prediction", result)
+        c2.metric("Probability", f"{probability:.2f}")
+        c3.metric("Confidence", f"{confidence:.2f}")
 
         st.write("")
 
-        # -------------------------------------------
         # SMALL DONUT CHART
-        # -------------------------------------------
 
-        st.markdown("""
-        <div class="glass-card">
-        <h3 style='text-align:center;'>📈 Probability Distribution</h3>
-        </div>
-        """, unsafe_allow_html=True)
+        fig, ax = plt.subplots(figsize=(2.5, 2.5))
 
-        fig, ax = plt.subplots(figsize=(2.8, 2.8))
-
-        values = [survive_prob, nonsurvive_prob]
+        values = [probability, 1 - probability]
         labels = ['Survive', 'Not Survive']
 
         ax.pie(
@@ -300,10 +173,6 @@ with right_col:
 
     else:
 
-        st.markdown("""
-        <div class="glass-card">
-        <h4 style='text-align:center; color:gray;'>
-        Enter passenger details and click Predict Survival
-        </h4>
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("Enter passenger details and click Predict Survival.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
