@@ -1,0 +1,9 @@
+streamlit
+tensorflow
+scikit-learn
+pandas
+numpy
+matplotlib
+joblib
+h5py
+protobuf==6.31.1
